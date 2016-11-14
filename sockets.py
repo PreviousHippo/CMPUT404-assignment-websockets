@@ -27,7 +27,8 @@ sockets = Sockets(app)
 app.debug = True
 
 
-
+# https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
+# prof Hindle example on eclass and github
 clients = list()
 
 class World:
@@ -146,6 +147,8 @@ def update(entity):
 def world():
     '''you should probably return the world here'''
     return json.dumps(myWorld.world())
+
+
 @app.route("/entity/<entity>")
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
