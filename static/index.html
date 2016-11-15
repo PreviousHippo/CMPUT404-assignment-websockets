@@ -20,7 +20,7 @@
         See the License for the specific language governing permissions and
         limitations under the License.
     "/>
-    <script src="static/json2.js"></script>
+    <script src="json2.js"></script>
   </head>
   <body bgcolor="white" height="100%" width="100%">
     <div id="debug"></div>
@@ -36,27 +36,6 @@ var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
 
-//http://stackoverflow.com/questions/1484506/random-color-generator-in-javascript
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
-
-var size = 20;
-function getRandomSize() {
-  size = size +1;
-  if (size < 40){
-    return size;json
-  }
-  else{
-    size = 20
-  }
-}
-
 function debug(str) {
     var debugDiv = document.getElementById('debug');
     debugDiv.innerHTML = "" + str;
@@ -64,8 +43,6 @@ function debug(str) {
 debug("Test");
 
 world = {};
-
-
 
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
@@ -148,11 +125,10 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
-    s_data = {};
-    send[entity] = data;
-    info = JSON.stringify(s_data);
+    send={};
+    send[entity]=data;
+    info = JSON.stringify(send)
     socket.send(info);
-
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -256,6 +232,27 @@ mouse = (function() {
     return self;
 })();
 
+// http://stackoverflow.com/questions/1484506/random-color-generator-in-javascript
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+var size = 20;
+function getRandomSize() {
+  size = size +1;
+  if (size < 40){
+    return size;json
+  }
+  else{
+    size = 20
+  }
+}
+
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
@@ -270,7 +267,7 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':getRandomColor(),
                           'radius':getRandomSize()});
 });
-6
+
 
 function update() {
     drawFrame();
@@ -284,24 +281,21 @@ function wsSetup() {
         //XXX: TODO What are you going to do here?
         var xhr = new XMLHttpRequest();
         xhr.open('GET', "/world");
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState == 4) {
-            try {
-              if (xhr.status == 200) {
-                var r_data = JSON.parse(xhr.responseText);
-                for (i in r_data) {
-                  world[i] = r_data[i];
-                }
-                drawFrame();
+		    xhr.onreadystatechange = function () {
+    		if (xhr.readyState == 4) {
+    		    try {
+    		        if (xhr.status == 200) {
+    		        var json_obj = JSON.parse(xhr.responseText);
+    		 		    world = json_obj;
+                	    drawFrame();
+    		        }
               }
+    		    catch(e) {
+    		        alert('Error: ' + e.name);
+                }
             }
-            catch(e) {
-              alert('error: '+ e.name);
-            }
-          }
         };
-        xhr.send(null);
-
+	    xhr.send(null);
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -310,11 +304,11 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?
-            //copy resdata in world
-            var r_data = JSON.parse(msg.data);
-            for (i in r_data) {
-              world[i] = r_data[i]
+            var message = JSON.parse(msg.data);
+            for (item in message){
+                world[item] = message[item];
             }
+            drawNextFrame();
         } catch (e) {
             alert("socket on message: " + e);
         }
