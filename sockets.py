@@ -69,7 +69,7 @@ class Client:
         self.queue = queue.Queue()
 
 
-    def put(self, v):
+    def put(self, msg):
         self.queue.put_nowait(msg)
 
     def get(self):
@@ -80,15 +80,18 @@ myWorld = World()
 
 def set_listener( entity, data ):
     ''' do something with the update ! '''
+    #send_all_json
     updated = json.dumps({entity: data})
+    #send_all(msg)
     for client in clients:
-        clients.put(updated)
+        client.put(updated)
 
 myWorld.add_set_listener( set_listener )
 
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
+    # return app.send_static_file("index.html")
     return flask.redirect("/static/index.html")
 
 
@@ -103,7 +106,7 @@ def read_ws(ws,client):
                 myWorld.set(item, data[item])
         else:
             break
-    return None
+
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
@@ -138,6 +141,11 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
+    # data = flask_post_json()
+    # for i in data:
+    #     myWorld.update(entity, i, data[i])
+    # return flask.jsonify(myWorld.get(entity))
+
     data = flask_post_json()
     myWorld.set(entity, data)
     d_entity = myWorld.get(entity)
@@ -146,12 +154,14 @@ def update(entity):
 @app.route("/world", methods=['POST','GET'])
 def world():
     '''you should probably return the world here'''
+    # return flask.jsonify(myWorld.world())
     return json.dumps(myWorld.world())
 
 
 @app.route("/entity/<entity>")
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
+    # return flask.jsonify(myWorld.get(entity))
     return json.dumps(myWorld.get(entity))
 
 
@@ -159,6 +169,7 @@ def get_entity(entity):
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
+    # return flask.jsonify(myWorld.world())
     return json.dumps(myWorld.world())
 
 

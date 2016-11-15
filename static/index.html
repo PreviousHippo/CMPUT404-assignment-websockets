@@ -50,7 +50,7 @@ var size = 20;
 function getRandomSize() {
   size = size +1;
   if (size < 40){
-    return size;
+    return size;json
   }
   else{
     size = 20
@@ -148,6 +148,11 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    s_data = {};
+    send[entity] = data;
+    info = JSON.stringify(s_data);
+    socket.send(info);
+
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -265,7 +270,7 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
     addEntityWithoutName({'x':x,'y':y,'colour':getRandomColor(),
                           'radius':getRandomSize()});
 });
-
+6
 
 function update() {
     drawFrame();
@@ -277,6 +282,26 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', "/world");
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState == 4) {
+            try {
+              if (xhr.status == 200) {
+                var r_data = JSON.parse(xhr.responseText);
+                for (i in r_data) {
+                  world[i] = r_data[i];
+                }
+                drawFrame();
+              }
+            }
+            catch(e) {
+              alert('error: '+ e.name);
+            }
+          }
+        };
+        xhr.send(null);
+
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -285,6 +310,11 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             //XXX: TODO What are you going to do here?
+            //copy resdata in world
+            var r_data = JSON.parse(msg.data);
+            for (i in r_data) {
+              world[i] = r_data[i]
+            }
         } catch (e) {
             alert("socket on message: " + e);
         }
